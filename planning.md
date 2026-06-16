@@ -17,17 +17,37 @@ You must have at least 3 tools. The three required tools are listed — add any 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
 
+This tool will look in the listings dataset (_listings.json_) for 3 items that matches the user's criteria. It should look for items with a similar description (based on keyword overlap), filtered by size (can be null or empty), and filtered by maximum price the user is allow to spend (can be null or empty). 
+
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
-- `description` (str): ...
-- `size` (str): ...
-- `max_price` (float): ...
+- `description` (str): A string the represents the keywords that the user used to describe the item he/she is looking for. (e.g. oversized flannel shirt)
+- `size` (str): A string that represents the size the user is looking for. It can be null to skip size filtering. Its case-insensitive, meaning that _M_ can be both _M_ or _S/M_ (as long as the letter is there, its ok)
+- `max_price` (float): A floating point number that represents the maximum price the user is allowed to spend (inclusive). It can be null to skip price filtering.
 
 **What it returns:**
 <!-- Describe the return value — what fields does a result contain? -->
 
+- If matching items are found, the tool will return a list with the 3 most relevant items that matches the user's criteria. A list of objects/dictonaries sort by relevance (calculated by keyword overlap). Each item will include the following fields:
+  - id
+  - title
+  - description
+  - category
+  - style_tags (list)
+  - size
+  - condition
+  - price (float)
+  - colors (list)
+  - brand
+  - platform
+- If no matching items are found, the tool will return an empty list.
+  - Example: `[]`
+
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if no listings match? -->
+
+If the `search_listings` tool returns an empty list the agent won't call the next tool (Suggest outfit) or raise an exception. Instead, it will return the user a descriptive message like:
+- "_Hi! I couln't find an item that matches your criteria. What if you try with another piece and I'll help you figure out how to wear them!_"
 
 ---
 
@@ -36,16 +56,23 @@ You must have at least 3 tools. The three required tools are listed — add any 
 **What it does:**
 <!-- Describe what this tool does in 1–2 sentences -->
 
+This tool will use the most relevant item from the `search_listings` tool and the current user's wardrobe items in a prompt to query the LLM asking for a suggestion about a specific outfit combination. The prompt will format the user's wardrobe pieces and ask the LLM for an outfit using the most relevant items and certain items from the wardrobe.
+
 **Input parameters:**
 <!-- List each parameter, its type, and what it represents -->
-- `new_item` (dict): ...
-- `wardrobe` (dict): ...
+- `new_item` (dict): A dictionary/object that represents that most relevant item from the list returned by the `search_listings` tool. Cannot be empty or null
+- `wardrobe` (dict): A dictionary/object that represents the current user's wardrobe pieces. It will have one key named `items` that will have the list of pieces in the wardrobe.
 
 **What it returns:**
 <!-- Describe the return value -->
 
+The tool will return a non-empty string with an outfit suggestion that includes the most relevant item and the user's wardrobe.
+If the user's wardrobe is empty, it will also return an outfit suggestion; however, this will just be general styling guidelines. Nothing specific to the user's wardrobe, since it was empty.
+
 **What happens if it fails or returns nothing:**
 <!-- What should the agent do if the wardrobe is empty or no outfit can be suggested? -->
+
+The tool will always return a string. Even if the wardrobe is empty or no outfit can be suggested, it will still give general styling guidelines to the user.
 
 ---
 
