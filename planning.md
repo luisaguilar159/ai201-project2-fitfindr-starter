@@ -154,26 +154,43 @@ The inputs are the following:
 - **Size:** Size of the item. It can be empty or None to skip size filtering
 - **Max price:** Maximum price the user will pay for the item. Inclusive. Can be empty to avoid filtering by price.
 
+The output is the following:
+- A list of 3 items that are the most relevant to the user's query
+- **The most relevant item example:** _Faded Band Tee — $22, Depop, Good condition._
+
 **Step 2:**
 <!-- What happens next? What was returned from step 1? What tool is called now? -->
 
-After the agent gets the 3 most relevant items from the dataset, it will use the most relevant item and the current user's wardrobe to suggest a complete outfits.
+After the agent gets the 3 most relevant items from the dataset, it will use the most relevant item and the current user's wardrobe to suggest a complete outfit.
 
-From the tool on step 1, it uses the most relevant item. So, along with the user's current wardrobe (within `wardrobe_schema.json`), the agent will call the **suggest_outfit(new_item, user's wardrobe)** tool to generate a complete outfit suggestion.
+From the tool on step 1, it uses the most relevant item. So, along with the user's current wardrobe (within `wardrobe_schema.json`), the agent will call the `suggest_outfit(new_item, user's wardrobe)` tool to generate a complete outfit suggestion (a string).
 
 The tool will fail only if:
 - The current user's wardrobe is empty, and it'll call the LLM with a prompt for general styling ideas (what kinds of items pair well with the item the user shared, what vibe it suits, etc.). 
 
 The inputs are the following:
-- **Item user shared:** The most relevant item from the `search_listings(description, size, max_price)` tool on Step 1. Cannot be empty or null.
-- **User's wardrobe:** The current user's wardrobe in a dictionary format with the list of items the user has. It may be empty, so handle it too.
+- **Most relevant item:** The most relevant item from the `search_listings(description, size, max_price)` tool on **Step 1**. Cannot be empty or null.
+- **User's wardrobe:** The current user's wardrobe in a dictionary format with the list of items the user has in his/her wardrobe at home. It may be empty, so call an LLM for general styling ideas for the user.
+
+The output is the following:
+- A string with a complete outfit suggestion. Around 2 to 4 sentences long.
+- **Example:** _Pair this with your wide-leg jeans and platform Docs for a classic 90s grunge look. Roll the sleeves once and tuck the front corner slightly for shape._
+
 
 **Step 3:**
 <!-- Continue until the full interaction is complete -->
 
-After the agent gets the complete outfit suggestion from **Step 2** and the most relevant item from **Step 1**, it will send it to the LLM, using the `create_fit_card(suggested_outfit, new_item)`, along with a specific prompt, to generate a casual TikTok/Instagram ready-to-use caption.
+After the agent gets the complete outfit suggestion from **Step 2** and the most relevant item from **Step 1**, it will send it to the LLM, using the `create_fit_card(suggested_outfit, new_item)` tool, along with a specific prompt, to generate a casual TikTok/Instagram ready-to-use caption (a string).
 
+The tool won't fail directly, but if the outfit suggestion comes empty or missing, the agent will return a descriptive error message like:
+- _Hi! It looks like I couldn't find an outfit suggestion for you. Can you try again with another item? I'll do my best this time!_
+
+The inputs are the following:
+- **Outfit suggestion:** The complete outfit suggestion from the `suggest_outfit(new_item, user's wardrobe)` tool on **Step 2**. Can be empty.
+- **Most relevant item:** The most relevant item from the `search_listings(description, size, max_price)` tool on **Step 1**. Cannot be empty or null.
 
 **Final output to user:**
 <!-- What does the user actually see at the end? -->
+
+_thrifted this faded band tee off depop for $22 and honestly it was made for my wide-legs 🖤 full look in my stories_
 
