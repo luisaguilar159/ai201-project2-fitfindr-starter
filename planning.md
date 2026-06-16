@@ -139,11 +139,41 @@ Write out what a full user interaction looks like from start to finish — tool 
 **Step 1:**
 <!-- What does the agent do first? Which tool is called? With what input? -->
 
+The agent will look for items that match the user's criteria in the dataset.
+
+The agent will take the description of what the user is asking for (e.g. t-shirt, pants, etc.), the size (if any), and the max price (if any) from the input prompt.
+
+Then, it will call the `search_listings(description, size, max_price)` tool to get 3 items that match the user's criteria. The items will be retrieved from the static dataset (_listings.json_) and will be sorted by relevance.
+
+The tool will not fail directly, but if it doesn't find any matches, it will return an empty list.
+Also, in case the tool returns an empty list, it doesn't call the tool on **Step 2** and will provide an answer to the user to try another prompt in a different way. Something like:
+- "_Hi! I couln't find an item that matches your criteria. What if you try with another piece and I'll help you figure out how to wear them!_"
+
+The inputs are the following:
+- **Description:** Keywords that describe or detail what the user is looking for (e.g. t-shirt, pants, etc.)
+- **Size:** Size of the item. It can be empty or None to skip size filtering
+- **Max price:** Maximum price the user will pay for the item. Inclusive. Can be empty to avoid filtering by price.
+
 **Step 2:**
 <!-- What happens next? What was returned from step 1? What tool is called now? -->
+
+After the agent gets the 3 most relevant items from the dataset, it will use the most relevant item and the current user's wardrobe to suggest a complete outfits.
+
+From the tool on step 1, it uses the most relevant item. So, along with the user's current wardrobe (within `wardrobe_schema.json`), the agent will call the **suggest_outfit(new_item, user's wardrobe)** tool to generate a complete outfit suggestion.
+
+The tool will fail only if:
+- The current user's wardrobe is empty, and it'll call the LLM with a prompt for general styling ideas (what kinds of items pair well with the item the user shared, what vibe it suits, etc.). 
+
+The inputs are the following:
+- **Item user shared:** The most relevant item from the `search_listings(description, size, max_price)` tool on Step 1. Cannot be empty or null.
+- **User's wardrobe:** The current user's wardrobe in a dictionary format with the list of items the user has. It may be empty, so handle it too.
 
 **Step 3:**
 <!-- Continue until the full interaction is complete -->
 
+After the agent gets the complete outfit suggestion from **Step 2** and the most relevant item from **Step 1**, it will send it to the LLM, using the `create_fit_card(suggested_outfit, new_item)`, along with a specific prompt, to generate a casual TikTok/Instagram ready-to-use caption.
+
+
 **Final output to user:**
 <!-- What does the user actually see at the end? -->
+
